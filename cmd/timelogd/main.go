@@ -14,6 +14,9 @@ func main() {
 		panic(err)
 	}
 
+	// watch changes
+	go f.Watch()
+
 	app := App{
 		File: &f,
 	}

@@ -5,6 +5,8 @@ import (
 	"os"
 	"sync"
 
+	"github.com/fsnotify/fsnotify"
+
 	"github.com/pkg/errors"
 )
 
@@ -12,6 +14,22 @@ type TimelogFile struct {
 	Timelog
 	sync.RWMutex
 	Path string
+}
+
+func (f *TimelogFile) Watch() {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		panic(err)
+	}
+
+	watcher.Add(f.Path)
+	for range watcher.Events {
+		func() {
+			f.Lock()
+			defer f.Unlock()
+			f.Load()
+		}()
+	}
 }
 
 func (f *TimelogFile) Load() error {
