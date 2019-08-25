@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	f := gotimelog.File{}
+	f := gotimelog.Timelog{}
 	err := f.LoadFile("/home/me/.local/share/gtimelog/timelog.txt")
 	fmt.Printf("%v %+v", err, f.Entries[0])
 }

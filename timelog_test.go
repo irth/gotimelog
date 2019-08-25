@@ -8,41 +8,55 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParseEntry(t *testing.T) {
-	entry, ok := gotimelog.ParseEntry("2021-04-14 21:37: title: kek")
+func TestParseLine(t *testing.T) {
+	line := gotimelog.ParseLine("2021-04-14 21:37: title: kek")
+	entry, ok := line.(gotimelog.Entry)
 	assert.True(t, ok)
-	assert.Equal(t, time.Date(2021, 04, 14, 21, 37, 0, 0, time.UTC), entry.Timestamp)
-	assert.Equal(t, "title: kek", entry.Title)
+	assert.Equal(t, time.Date(2021, 04, 14, 21, 37, 0, 0, time.UTC), entry.Timestamp())
+	assert.Equal(t, "title: kek", entry.Title())
 
-	_, ok = gotimelog.ParseEntry("2021-04-42 21:37: title: kek")
-	assert.False(t, ok)
-	_, ok = gotimelog.ParseEntry("2021-04-14 21:37 title: kek")
-	assert.False(t, ok)
-	_, ok = gotimelog.ParseEntry("2021-04-42 21:37")
-	assert.False(t, ok)
-	_, ok = gotimelog.ParseEntry("foo: bar")
-	assert.False(t, ok)
-	_, ok = gotimelog.ParseEntry("# kek")
-	assert.False(t, ok)
-	_, ok = gotimelog.ParseEntry("")
-	assert.False(t, ok)
+	for _, line := range []string{
+		"2021-04-42 21:37: title: kek",
+		"2021-04-14 21:37 title: kek",
+		"2021-04-42 21:37",
+		"foo: bar",
+		"",
+	} {
+		comment, ok := gotimelog.ParseLine(line).(gotimelog.OldStyleComment)
+		assert.True(t, ok)
+		assert.Equal(t, line, comment.Contents())
+	}
+
+	comment, ok := gotimelog.ParseLine("# kek").(gotimelog.Comment)
+	assert.True(t, ok)
+	assert.Equal(t, " kek", comment.Contents())
 }
 
 func TestLoad(t *testing.T) {
-	f := gotimelog.File{}
-	err := f.Load(`
-2009-10-11 12:13: kek
+	f := gotimelog.Timelog{}
+	err := f.Load(`2009-10-11 12:13: kek
 
 # test
-2010-11-14 21:38: nightdrive
-	`)
+2010-11-14 21:38: nightdrive`)
 
 	assert.NoError(t, err)
-	assert.Len(t, f.Entries, 2)
+	assert.Len(t, f.Entries, 4)
 
-	assert.Equal(t, time.Date(2009, 10, 11, 12, 13, 0, 0, time.UTC), f.Entries[0].Timestamp)
-	assert.Equal(t, "kek", f.Entries[0].Title)
+	e1, ok := f.Entries[0].(gotimelog.Entry)
+	assert.True(t, ok)
+	e2, ok := f.Entries[1].(gotimelog.OldStyleComment)
+	assert.True(t, ok)
+	e3, ok := f.Entries[2].(gotimelog.Comment)
+	assert.True(t, ok)
+	e4, ok := f.Entries[3].(gotimelog.Entry)
+	assert.True(t, ok)
 
-	assert.Equal(t, time.Date(2010, 11, 14, 21, 38, 0, 0, time.UTC), f.Entries[1].Timestamp)
-	assert.Equal(t, "nightdrive", f.Entries[1].Title)
+	assert.Equal(t, time.Date(2009, 10, 11, 12, 13, 0, 0, time.UTC), e1.Timestamp())
+	assert.Equal(t, "kek", e1.Title())
+
+	assert.Equal(t, "", e2.Contents())
+	assert.Equal(t, " test", e3.Contents())
+
+	assert.Equal(t, time.Date(2010, 11, 14, 21, 38, 0, 0, time.UTC), e4.Timestamp())
+	assert.Equal(t, "nightdrive", e4.Title())
 }
