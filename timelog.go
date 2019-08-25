@@ -1,10 +1,7 @@
 package gotimelog
 
 import (
-	"io/ioutil"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // Timelog represents the contents of a timelog.txt file.
@@ -13,15 +10,7 @@ type Timelog struct {
 	Entries []Line
 }
 
-func (f *Timelog) LoadFile(path string) error {
-	rawContents, err := ioutil.ReadFile(path)
-	if err != nil {
-		return errors.Wrap(err, "loading timelog.txt")
-	}
-	return f.Load(string(rawContents))
-}
-
-func (f *Timelog) Load(content string) error {
+func (f *Timelog) Parse(content string) error {
 	entries := []Line{}
 
 	lines := strings.Split(content, "\n")
@@ -32,4 +21,14 @@ func (f *Timelog) Load(content string) error {
 
 	f.Entries = entries
 	return nil
+}
+
+func (f *Timelog) String() string {
+	lines := make([]string, 0, len(f.Entries))
+
+	for _, entry := range f.Entries {
+		lines = append(lines, entry.Text())
+	}
+
+	return strings.Join(lines, "\n")
 }
