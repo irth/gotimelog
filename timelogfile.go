@@ -1,24 +1,41 @@
 package gotimelog
 
 import (
-	"io/ioutil"
+	"fmt"
+	"os"
+	"sync"
 
 	"github.com/pkg/errors"
 )
 
 type TimelogFile struct {
 	Timelog
+	sync.RWMutex
 	Path string
 }
 
 func (f *TimelogFile) Load() error {
-	rawContents, err := ioutil.ReadFile(f.Path)
+	file, err := os.OpenFile(f.Path, os.O_RDONLY, 0644)
 	if err != nil {
-		return errors.Wrap(err, "loading timelog.txt")
+		return errors.Wrap(err, "opening timelog.txt for reading")
 	}
-	return f.Timelog.Parse(string(rawContents))
+	return f.Timelog.Load(file)
 }
 
 func (f *TimelogFile) Save() error {
-	return ioutil.WriteFile(f.Path, []byte(f.String()), 0644)
+	file, err := os.OpenFile(f.Path, os.O_WRONLY, 0644)
+	if err != nil {
+		return errors.Wrap(err, "opening timelog.txt for writing")
+	}
+	return f.Timelog.Save(file)
+}
+
+func (f *TimelogFile) Append(l Line) error {
+	file, err := os.OpenFile(f.Path, os.O_APPEND, 0644)
+	if err != nil {
+		return errors.Wrap(err, "opening timelog.txt for appending")
+	}
+
+	_, err = fmt.Fprintln(file, l.Text())
+	return err
 }

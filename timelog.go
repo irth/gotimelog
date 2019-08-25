@@ -1,7 +1,9 @@
 package gotimelog
 
 import (
-	"strings"
+	"bufio"
+	"fmt"
+	"io"
 )
 
 // Timelog represents the contents of a timelog.txt file.
@@ -10,12 +12,20 @@ type Timelog struct {
 	Entries []Line
 }
 
-func (f *Timelog) Parse(content string) error {
+func (f *Timelog) Load(r io.Reader) error {
+	br := bufio.NewScanner(r)
 	entries := []Line{}
 
-	lines := strings.Split(content, "\n")
-	for _, line := range lines {
-		entry := ParseLine(strings.TrimSpace(line))
+	for {
+		if ok := br.Scan(); !ok {
+			err := br.Err()
+			if err == nil { // EOF
+				break
+			}
+			return err
+		}
+
+		entry := ParseLine(br.Text())
 		entries = append(entries, entry)
 	}
 
@@ -23,12 +33,12 @@ func (f *Timelog) Parse(content string) error {
 	return nil
 }
 
-func (f *Timelog) String() string {
-	lines := make([]string, 0, len(f.Entries))
-
+func (f *Timelog) Save(w io.Writer) error {
 	for _, entry := range f.Entries {
-		lines = append(lines, entry.Text())
+		_, err := fmt.Fprintln(w, entry.Text())
+		if err != nil {
+			return err
+		}
 	}
-
-	return strings.Join(lines, "\n")
+	return nil
 }
