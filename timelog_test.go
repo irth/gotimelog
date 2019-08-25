@@ -43,15 +43,15 @@ func TestLoad(t *testing.T) {
 	))
 
 	assert.NoError(t, err)
-	assert.Len(t, f.Entries, 4)
+	assert.Len(t, f.Lines, 4)
 
-	e1, ok := f.Entries[0].(*gotimelog.Entry)
+	e1, ok := f.Lines[0].(*gotimelog.Entry)
 	assert.True(t, ok)
-	e2, ok := f.Entries[1].(*gotimelog.OldStyleComment)
+	e2, ok := f.Lines[1].(*gotimelog.OldStyleComment)
 	assert.True(t, ok)
-	e3, ok := f.Entries[2].(*gotimelog.Comment)
+	e3, ok := f.Lines[2].(*gotimelog.Comment)
 	assert.True(t, ok)
-	e4, ok := f.Entries[3].(*gotimelog.Entry)
+	e4, ok := f.Lines[3].(*gotimelog.Entry)
 	assert.True(t, ok)
 
 	assert.Equal(t, time.Date(2009, 10, 11, 12, 13, 0, 0, time.UTC), e1.Timestamp())

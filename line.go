@@ -22,14 +22,15 @@ func ParseLine(line string) Line {
 		}
 	}
 
-	if len(line) < len(dateFormat)+2 {
+	l := len(EntryDateFormat)
+	if len(line) < l+2 {
 		// valid entries contain a timestamp and a title separated by ": "
 		return &OldStyleComment{line, meta}
 	}
 
-	rawTimestamp, sep, title := line[0:len(dateFormat)], line[len(dateFormat):len(dateFormat)+2], line[len(dateFormat)+2:]
+	rawTimestamp, sep, title := line[0:l], line[l:l+2], line[l+2:]
 
-	time, err := time.Parse("2006-01-02 15:04", rawTimestamp)
+	time, err := time.Parse(EntryDateFormat, rawTimestamp)
 	if err != nil {
 		return &OldStyleComment{line, meta}
 	}

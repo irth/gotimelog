@@ -9,12 +9,12 @@ import (
 // Timelog represents the contents of a timelog.txt file.
 // See: https://gtimelog.org/formats.html#timelog-txt
 type Timelog struct {
-	Entries []Line
+	Lines LineSlice
 }
 
 func (f *Timelog) Load(r io.Reader) error {
 	br := bufio.NewScanner(r)
-	entries := []Line{}
+	lines := []Line{}
 
 	for {
 		if ok := br.Scan(); !ok {
@@ -26,16 +26,16 @@ func (f *Timelog) Load(r io.Reader) error {
 		}
 
 		entry := ParseLine(br.Text())
-		entries = append(entries, entry)
+		lines = append(lines, entry)
 	}
 
-	f.Entries = entries
+	f.Lines = lines
 	return nil
 }
 
 func (f *Timelog) Save(w io.Writer) error {
-	for _, entry := range f.Entries {
-		_, err := fmt.Fprintln(w, entry.Text())
+	for _, line := range f.Lines {
+		_, err := fmt.Fprintln(w, line.Text())
 		if err != nil {
 			return err
 		}

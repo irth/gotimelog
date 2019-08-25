@@ -15,7 +15,7 @@ func main() {
 	}
 
 	app := App{
-		File: f,
+		File: &f,
 	}
 
 	m := mux.NewRouter()
